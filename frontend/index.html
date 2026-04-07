@@ -1,0 +1,165 @@
+<!--Generate a complete HTML file for a job scam detection web application named HireSight with clean CSS styling and 
+a responsive layout. 
+Include three sections: Job Scam Checker (textarea + analyze button), Company Verification (input + button), 
+and Report a Scam (multiple inputs + submit button). Use JavaScript with fetch API to connect to a backend 
+at http://localhost:5000 with endpoints /analyze, /company/:name, and /report. Display risk score, risk level with colors (high, medium, low), 
+reasons in a list, company status, and report submission response. Include proper error handling and dynamic result display sections.-->
+
+<!DOCTYPE html>
+<html lang="en">  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HireSight - Job Scam Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .high-risk {
+            color: red;
+        }
+        .medium-risk {
+            color: orange;
+        }
+        .low-risk {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HireSight - Job Scam Detection</h1>
+    </header>
+    <div class="container">
+        <div class="section" id="job-scam-checker">
+            <h2>Job Scam Checker</h2>
+            <textarea id="job-description" rows="5" placeholder="Enter job description here..."></textarea>
+            <button onclick="analyzeJob()">Analyze</button>
+            <div class="result" id="job-result"></div>
+        </div>
+        <div class="section" id="company-verification">
+            <h2>Company Verification</h2>
+            <input type="text" id="company-name" placeholder="Enter company name...">
+            <button onclick="verifyCompany()">Verify</button>
+            <div class="result" id="company-result"></div>
+        </div>
+        <div class="section" id="report-scam">
+            <h2>Report a Scam</h2>
+            <input type="text" id="report-name" placeholder="Your Name">
+            <input type="text" id="report-email" placeholder="Your Email">
+            <input type="text" id="report-company" placeholder="Company Name">
+            <input type="text" id="report-description" placeholder="Scam Description">
+            <button onclick="reportScam()">Submit Report</button>
+            <div class="result" id="report-result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeJob() {
+            const description = document.getElementById('job-description').value;
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description })
+                });
+                const data = await response.json();
+                displayJobResult(data);
+            } catch (error) {
+                document.getElementById('job-result').innerText = 'Error analyzing job description.';
+            }
+        }
+
+        function displayJobResult(data) {
+            const resultDiv = document.getElementById('job-result');
+            resultDiv.innerHTML = `
+                <p>Risk Score: ${data.riskScore}</p>
+                <p class="${data.riskLevel}-risk">Risk Level: ${data.riskLevel}</p>
+                <ul>Reasons:
+                    ${data.reasons.map(reason => `<li>${reason}</li>`).join('')}  
+                </ul>
+            `;  
+        }
+        async function verifyCompany() {
+            const companyName = document.getElementById('company-name').value;
+            try {
+                const response = await fetch(`http://localhost:5000/company/${companyName}`);
+                const data = await response.json();
+                displayCompanyResult(data);
+            } catch (error) {
+                document.getElementById('company-result').innerText = 'Error verifying company.';
+            }
+        }   
+        function displayCompanyResult(data) {
+            const resultDiv = document.getElementById('company-result');
+            resultDiv.innerHTML = `<p>Company Status: ${data.status}</p>`;
+        } 
+        async function reportScam() {
+            const name = document.getElementById('report-name').value;
+            const email = document.getElementById('report-email').value;
+            const company = document.getElementById('report-company').value;
+            const description = document.getElementById('report-description').value;
+            try {
+                const response = await fetch('http://localhost:5000/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, company, description })
+                });
+                const data = await response.json();
+                displayReportResult(data);
+            } catch (error) {
+                document.getElementById('report-result').innerText = 'Error submitting report.';
+            }
+        } 
+        function displayReportResult(data) {
+            const resultDiv = document.getElementById('report-result');
+            resultDiv.innerHTML = `<p>${data.message}</p>`;
+        } 
+    </script>
+</body>
+</html>
